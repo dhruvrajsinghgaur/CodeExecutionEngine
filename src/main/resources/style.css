@@ -1,0 +1,12 @@
+.keyword {
+    -fx-fill: #569CD6;
+    -fx-font-weight: bold;
+}
+
+.string {
+    -fx-fill: #CE9178;
+}
+
+.comment {
+    -fx-fill: #6A9955;
+}
