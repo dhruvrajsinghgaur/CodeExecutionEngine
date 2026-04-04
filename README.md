@@ -1,44 +1,34 @@
-# Code Execution Engine (Java)
+# Code Execution Engine (JavaFX IDE)
 
-## Overview
+A mini Java IDE built using JavaFX that allows:
+- Writing Java code
+- Compiling dynamically
+- Executing with real-time input/output
+- Interactive terminal (like VS Code)
 
-A mini code execution engine built in Java that compiles and runs user code dynamically.
-Supports real-time input, output streaming, and process management.
+## 🚀 Features
+- Live code execution
+- Terminal-style input/output
+- Multithreaded process handling
+- Custom Java compiler + executor
 
-## Features
+## 🛠 Tech Stack
+- Java
+- JavaFX
+- ProcessBuilder
+- Multithreading
 
-* Compile and execute Java programs
-* Real-time input handling (interactive mode)
-* Output and error stream handling
-* Timeout control for infinite loops
-* Multi-threaded execution
+## ▶️ How to Run
 
-## Tech Stack
+1. Download JavaFX SDK
+2. Add VM options:
 
-* Java
-* ProcessBuilder
-* Multithreading (Thread, Runnable)
+--module-path "PATH_TO_JAVAFX/lib" --add-modules javafx.controls,javafx.fxml
 
-## How It Works
+3. Run IDE.java
 
-1. User code is written to a file
-2. Code is compiled using `javac`
-3. Program is executed using `ProcessBuilder`
-4. Input/output streams are handled using threads
-
-## Future Improvements
-
-* GUI (Mini IDE)
-* Multiple test case runner
-* Syntax highlighting
-* Memory limits
-
-## How to Run
-
-1. Clone the repository
-2. Compile all files
-3. Run Main.java
-
-## Author
-
-Dhruvraj Singh Gaur
+## 📌 Future Improvements
+- Syntax highlighting (RichTextFX)
+- File system support
+- Multiple tabs
+- Debugger

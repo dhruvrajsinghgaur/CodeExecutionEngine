@@ -1,31 +1,47 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.util.function.Consumer;
 
 public class Compiler {
-    public static boolean compile(String className) {
-        try{
+
+    public static void compile(String code, Consumer<String> onSuccess, Consumer<String> onError) {
+        try {
+            File dir = new File("temp");
+            if (!dir.exists()) dir.mkdir();
+
+            // Assume class name = Main
+            String className = "Main";
+            File file = new File(dir, className + ".java");
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+            writer.write(code);
+            writer.close();
+
             ProcessBuilder pb = new ProcessBuilder(
-                    "javac", "temp/" +  className + ".java"
+                    "javac", file.getAbsolutePath()
             );
 
-            pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            BufferedReader errorReader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream())
+            );
 
+            StringBuilder errors = new StringBuilder();
             String line;
-
-            while((line = outputReader.readLine()) != null){
-                System.out.println(line);
+            while ((line = errorReader.readLine()) != null) {
+                errors.append(line).append("\n");
             }
 
-            int exitCode = process.waitFor();
+            process.waitFor();
 
-            return exitCode == 0;
+            if (errors.length() > 0) {
+                onError.accept(errors.toString());
+            } else {
+                onSuccess.accept(className);
+            }
 
-        }catch(Exception e){
-            e.printStackTrace();
+        } catch (Exception e) {
+            onError.accept("Compilation failed: " + e.getMessage());
         }
-        return false;
     }
 }

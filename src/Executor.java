@@ -1,37 +1,42 @@
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import javafx.application.Platform;
+import java.io.*;
+import java.util.function.Consumer;
 import java.util.concurrent.TimeUnit;
 
 public class Executor {
-    public static void run(String className){
-        try{
+
+    public static Process process;
+    public static BufferedWriter writer;
+
+    public static void run(String className, Consumer<String> outputHandler) {
+        try {
             ProcessBuilder pb = new ProcessBuilder(
                     "java", "-cp", "temp", className
             );
 
-            Process process = pb.start();
+            process = pb.start();
 
-            // Thread 1 -> Read Program Output
-            Thread outputThread = new Thread(()->{
+            writer = new BufferedWriter(
+                    new OutputStreamWriter(process.getOutputStream())
+            );
+
+            Thread outputThread = new Thread(() -> {
                 try {
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(process.getInputStream())
-                    );
+                    InputStream is = process.getInputStream();
+                    int ch;
 
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        System.out.println(line);
+                    while ((ch = is.read()) != -1) {
+                        char c = (char) ch;
+
+                        Platform.runLater(() -> outputHandler.accept(String.valueOf(c)));
                     }
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
 
-            // Thread 2 -> Read Error
-            Thread errorThread = new Thread(()->{
+            Thread errorThread = new Thread(() -> {
                 try {
                     BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getErrorStream())
@@ -39,62 +44,37 @@ public class Executor {
 
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        System.out.println("Error : " + line);
+                        String finalLine = "Error: " + line;
+                        Platform.runLater(() -> outputHandler.accept(finalLine));
                     }
-
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            });
-
-            // Thread 3 -> TAKE USER INPUT AND SEND TO PROCESS
-            Thread inputThread = new Thread(()->{
-                try {
-                    BufferedReader userInput = new BufferedReader(
-                            new InputStreamReader(System.in)
-                    );
-
-                    BufferedWriter writer = new BufferedWriter(
-                            new OutputStreamWriter(process.getOutputStream())
-                    );
-
-                    String line;
-
-                    while ((line = userInput.readLine()) != null) {
-                        try {
-                            if (!process.isAlive()) break;
-                            writer.write(line);
-                            writer.newLine();
-                            writer.flush();
-                        }catch (Exception e){
-                            break;
-                        }
-                    }
-
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
 
             outputThread.start();
             errorThread.start();
-            inputThread.start();
 
-            boolean finished = process.waitFor(5,TimeUnit.SECONDS);
+            process.waitFor();
 
-            if(!finished){
-                process.destroy();
-                System.out.println("Execution TimeOut");
-            }
-
-            inputThread.interrupt();
-
-            // wait for threads to finish.
             outputThread.join();
             errorThread.join();
 
-        }catch(Exception e){
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendInput(String input) {
+        try {
+            if (process != null && process.isAlive()) {
+                writer.write(input);
+                writer.newLine();
+                writer.flush();
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
+
