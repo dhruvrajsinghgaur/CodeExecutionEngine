@@ -4,7 +4,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 public class IDE extends Application {
 
@@ -14,12 +17,15 @@ public class IDE extends Application {
     public void start(Stage stage) {
         // Top bar buttons
         Button newTabBtn = new Button("New");
+        Button openBtn = new Button("Open");
+        Button saveBtn = new Button("Save");
+        Button saveAsBtn = new Button("Save As");
         Button closeTabBtn = new Button("Close");
         Button runBtn = new Button("Run");
         Button clearBtn = new Button("Clear");
         Label status = new Label("Ready");
 
-        HBox topBar = new HBox(8, newTabBtn, closeTabBtn, runBtn, clearBtn, status);
+        HBox topBar = new HBox(8, newTabBtn, openBtn, saveBtn, saveAsBtn, closeTabBtn, runBtn, clearBtn, status);
         topBar.setPadding(new Insets(8));
 
         // TabPane
@@ -36,6 +42,43 @@ public class IDE extends Application {
             tabPane.getSelectionModel().selectLast();
         });
 
+        openBtn.setOnAction(e -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Open Java File");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Java Files", "*.java"));
+            File file = chooser.showOpenDialog(stage);
+            if (file != null) {
+                EditorTab tab = createEditorTab(file.getName(), "");
+                if (tab.open(file)) {
+                    tabPane.getTabs().add(tab);
+                    tabPane.getSelectionModel().select(tab);
+                    status.setText("Opened: " + file.getName());
+                }
+            }
+        });
+
+        saveBtn.setOnAction(e -> {
+            EditorTab et = getSelectedEditorTab();
+            if (et != null) {
+                boolean ok = et.saveWithChooserIfNeeded(stage);
+                if (ok) status.setText("Saved: " + et.getFileName());
+            }
+        });
+
+        saveAsBtn.setOnAction(e -> {
+            EditorTab et = getSelectedEditorTab();
+            if (et != null) {
+                FileChooser chooser = new FileChooser();
+                chooser.setTitle("Save As");
+                chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Java Files", "*.java"));
+                File file = chooser.showSaveDialog(stage);
+                if (file != null) {
+                    boolean ok = et.saveAs(file);
+                    if (ok) status.setText("Saved As: " + file.getName());
+                }
+            }
+        });
+
         closeTabBtn.setOnAction(e -> {
             Tab selected = tabPane.getSelectionModel().getSelectedItem();
             if (selected != null) tabPane.getTabs().remove(selected);
@@ -43,10 +86,11 @@ public class IDE extends Application {
 
         runBtn.setOnAction(e -> {
             EditorTab et = getSelectedEditorTab();
-            if (et != null) {
-                status.setText("Running: " + et.getText());
-                et.runCode(() -> status.setText("Ready"));
-            }
+            if (et == null) return;
+            status.setText("Running: " + et.getText());
+            // auto-save before run
+            et.saveWithChooserIfNeeded(stage);
+            et.runCode(() -> status.setText("Ready"));
         });
 
         clearBtn.setOnAction(e -> {
@@ -59,16 +103,20 @@ public class IDE extends Application {
         root.setCenter(tabPane);
 
         Scene scene = new Scene(root, 1000, 700);
-        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        try {
+            scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        } catch (Exception ex) {
+            // stylesheet not found; continue without it
+        }
 
         stage.setScene(scene);
-        stage.setTitle("Multi-Tab Code Execution Engine");
+        stage.getIcons();
+        stage.setTitle("Code Execution Engine");
         stage.show();
     }
 
     private EditorTab createEditorTab(String title, String initialText) {
-        EditorTab tab = new EditorTab(title, initialText);
-        return tab;
+        return new EditorTab(title, initialText);
     }
 
     private EditorTab getSelectedEditorTab() {

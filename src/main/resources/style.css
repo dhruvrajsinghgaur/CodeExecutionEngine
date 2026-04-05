@@ -1,12 +1,89 @@
-.keyword {
-    -fx-fill: #569CD6;
-    -fx-font-weight: bold;
+/* Root */
+.root {
+    -fx-font-family: "Consolas", "Source Code Pro", "Monaco", monospace;
+    -fx-base: #1e1e1e;
+    -fx-background: #1e1e1e;
 }
 
-.string {
-    -fx-fill: #CE9178;
+/* Menu and toolbar */
+.menu-bar {
+    -fx-background-color: #252526;
+    -fx-text-fill: #d4d4d4;
+}
+.tool-bar {
+    -fx-background-color: #2d2d2d;
+    -fx-padding: 6;
 }
 
-.comment {
-    -fx-fill: #6A9955;
+/* Sidebar */
+.sidebar {
+    -fx-background-color: #252526;
+    -fx-border-color: #2a2a2a;
+}
+
+/* TabPane */
+.editor-tab-pane {
+    -fx-background-color: #1e1e1e;
+}
+.tab-pane .tab {
+    -fx-background-color: transparent;
+}
+.tab-pane .tab:selected {
+    -fx-background-color: linear-gradient(#2a2a2a, #252525);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+.tab-pane .tab-label {
+    -fx-text-fill: #d4d4d4;
+}
+
+/* Code area */
+.code-area {
+    -fx-control-inner-background: #1e1e1e;
+    -fx-highlight-fill: #264f78;
+    -fx-highlight-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-text-fill: #d4d4d4;
+}
+
+/* Output area */
+.output-area {
+    -fx-control-inner-background: #151515;
+    -fx-text-fill: #9cdcfe;
+    -fx-font-size: 12px;
+}
+
+/* Input field */
+.input-field {
+    -fx-control-inner-background: #1e1e1e;
+    -fx-text-fill: #d4d4d4;
+}
+
+/* Placeholder */
+.placeholder {
+    -fx-text-fill: #6a6a6a;
+    -fx-padding: 8;
+}
+
+/* Status bar */
+.status-bar {
+    -fx-background-color: #007acc;
+    -fx-text-fill: white;
+}
+
+/* Syntax classes (keep your previous colors or adjust) */
+.keyword { -fx-fill: #c586c0; -fx-font-weight: bold; }
+.string  { -fx-fill: #ce9178; }
+.comment { -fx-fill: #6a9955; -fx-font-style: italic; }
+
+/* Buttons */
+.button {
+    -fx-background-color: #0e639c;
+    -fx-text-fill: white;
+    -fx-background-radius: 3;
+}
+
+/* Scrollbars, selection, etc. */
+.scroll-pane {
+    -fx-background: transparent;
 }
