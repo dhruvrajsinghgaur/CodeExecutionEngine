@@ -9,27 +9,19 @@ public class Executor {
 
     public static void run(String className, Consumer<String> outputHandler) {
         try {
-            ProcessBuilder pb = new ProcessBuilder(
-                    "java", "-cp", "temp", className
-            );
-
+            ProcessBuilder pb = new ProcessBuilder("java", "-cp", "temp", className);
             process = pb.start();
 
-            writer = new BufferedWriter(
-                    new OutputStreamWriter(process.getOutputStream())
-            );
+            writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
 
             Thread outputThread = new Thread(() -> {
                 try {
                     InputStream is = process.getInputStream();
                     int ch;
-
                     while ((ch = is.read()) != -1) {
                         char c = (char) ch;
-
                         Platform.runLater(() -> outputHandler.accept(String.valueOf(c)));
                     }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -37,13 +29,10 @@ public class Executor {
 
             Thread errorThread = new Thread(() -> {
                 try {
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(process.getErrorStream())
-                    );
-
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        String finalLine = "Error: " + line;
+                        String finalLine = "Error: " + line + "\n";
                         Platform.runLater(() -> outputHandler.accept(finalLine));
                     }
                 } catch (Exception e) {
@@ -55,7 +44,6 @@ public class Executor {
             errorThread.start();
 
             process.waitFor();
-
             outputThread.join();
             errorThread.join();
 
@@ -76,4 +64,3 @@ public class Executor {
         }
     }
 }
-
