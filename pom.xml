@@ -23,12 +23,6 @@
             <version>1.1.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.techsenger.jeditermfx</groupId>
-            <artifactId>jeditermfx-ui</artifactId>
-            <version>1.1.0</version>
-        </dependency>
-
         <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
