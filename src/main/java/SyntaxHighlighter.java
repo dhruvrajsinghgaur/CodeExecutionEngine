@@ -21,27 +21,20 @@ public class SyntaxHighlighter {
             "var", "record", "sealed", "permits", "yield", "when"
     };
 
-    // Comments before strings/keywords so "// public" doesn't keyword-highlight
     private static final String COMMENT_PATTERN    = "//[^\n]*|/\\*.*?\\*/";
 
-    // Strings before keywords so "\"public\"" doesn't trigger keyword highlighting
     private static final String STRING_PATTERN     = "\"([^\"\\\\]|\\\\.)*\"";
 
-    // Char literals (e.g. 'a', '\n', '\\')
     private static final String CHAR_PATTERN       = "'([^'\\\\]|\\\\.)'";
 
-    // Annotations before keywords so @interface isn't parsed as "interface" keyword
     private static final String ANNOTATION_PATTERN = "@[\\w]+";
 
-    // Keywords (exact word boundaries to avoid matching "integer" for "int")
     private static final String KEYWORD_PATTERN    =
             "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 
-    // Number literals: hex (0xFF), decimal, float (3.14f), long (100L), scientific (1e5)
     private static final String NUMBER_PATTERN     =
             "\\b(0[xX][0-9a-fA-F]+[lL]?|\\d+\\.?\\d*([eE][+-]?\\d+)?[fFdDlL]?)\\b";
 
-    // Comments → Strings → Chars → Annotations → Keywords → Numbers
     private static final Pattern PATTERN = Pattern.compile(
             "(?<COMMENT>"     + COMMENT_PATTERN    + ")"
                     + "|(?<STRING>"    + STRING_PATTERN     + ")"
@@ -49,7 +42,7 @@ public class SyntaxHighlighter {
                     + "|(?<ANNOTATION>"+ ANNOTATION_PATTERN + ")"
                     + "|(?<KEYWORD>"   + KEYWORD_PATTERN    + ")"
                     + "|(?<NUMBER>"    + NUMBER_PATTERN     + ")",
-            Pattern.DOTALL   // makes . match newlines → multi-line /* */ comments work
+            Pattern.DOTALL
     );
 
 
