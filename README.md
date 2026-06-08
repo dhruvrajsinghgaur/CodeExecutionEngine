@@ -11,6 +11,9 @@ A mini Java IDE built using JavaFX that allows:
 - Terminal-style input/output
 - Multithreaded process handling
 - Custom Java compiler + executor
+- Syntax Highlighting
+- MultiTab support
+- File save option
 
 ## 🛠 Tech Stack
 - Java
@@ -35,8 +38,5 @@ A mini Java IDE built using JavaFX that allows:
       --module-path "PATH_TO_JAVAFX/lib" --add-modules javafx.controls,javafx.fxml
 
 ## 📌 Future Improvements
-- Syntax highlighting (RichTextFX)
-- File system support (open/save files)
-- Multiple tabs for editing
 - Debugger & error highlighting
 - Better terminal integration
