@@ -1,18 +1,35 @@
 import java.io.*;
 import java.util.function.Consumer;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Compiler {
 
-    public static void compile(String code, Consumer<String> onSuccess, Consumer<String> onError) {
+    /**
+     * Compiles the given source code into the provided tempDir.
+     * This method is blocking — always call it from a background thread.
+     *
+     * @param code      Java source code to compile
+     * @param tempDir   Per-tab temp directory (avoids collisions between tabs)
+     * @param onSuccess Called with the compiled class name on success
+     * @param onError   Called with the compiler error output on failure
+     */
+    public static void compile(String code,
+                               File tempDir,
+                               Consumer<String> onSuccess,
+                               Consumer<String> onError) {
+        Process process = null;
         try {
-            File dir = new File("temp");
-            if (!dir.exists()) dir.mkdir();
-
-            // Clean up old files
-            for (File f : dir.listFiles()) {
-                if (f.getName().endsWith(".java") || f.getName().endsWith(".class")) {
-                    f.delete();
+            // Ensure temp dir exists and is clean
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+            File[] existing = tempDir.listFiles();
+            if (existing != null) {
+                for (File f : existing) {
+                    if (f.getName().endsWith(".java") || f.getName().endsWith(".class")) {
+                        f.delete();
+                    }
                 }
             }
 
@@ -22,40 +39,50 @@ public class Compiler {
                 return;
             }
 
-            File file = new File(dir, className + ".java");
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                writer.write(code);
+            File sourceFile = new File(tempDir, className + ".java");
+            try (BufferedWriter w = new BufferedWriter(new FileWriter(sourceFile))) {
+                w.write(code);
             }
 
-            ProcessBuilder pb = new ProcessBuilder("javac", file.getAbsolutePath());
-            Process process = pb.start();
+            ProcessBuilder pb = new ProcessBuilder("javac", sourceFile.getAbsolutePath());
+            pb.redirectErrorStream(true);
+            process = pb.start();
 
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-            StringBuilder errors = new StringBuilder();
-            String line;
-            while ((line = errorReader.readLine()) != null) {
-                errors.append(line).append("\n");
+            // Read compiler output (errors go here on failure)
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
             }
 
-            process.waitFor();
+            int exitCode = process.waitFor();
 
-            if (errors.length() > 0) {
-                onError.accept(errors.toString());
-            } else {
+            if (exitCode == 0) {
                 onSuccess.accept(className);
+            } else {
+                onError.accept(output.toString());
             }
 
+        } catch (InterruptedException e) {
+            // Thread was interrupted (user clicked Stop during compilation)
+            if (process != null) process.destroyForcibly();
+            Thread.currentThread().interrupt();
+            onError.accept("Compilation cancelled.\n");
         } catch (Exception e) {
-            onError.accept("Compilation failed: " + e.getMessage());
+            onError.accept("Compilation failed: " + e.getMessage() + "\n");
         }
     }
 
+    /**
+     * Extracts the name of the first public class, interface, record, or enum.
+     */
     public static String extractClassName(String code) {
-        Pattern pattern = Pattern.compile("public\\s+(?:class|interface|enum)\\s+(\\w+)");
+        Pattern pattern = Pattern.compile(
+                "public\\s+(?:class|interface|enum|record)\\s+(\\w+)");
         Matcher matcher = pattern.matcher(code);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
+        return matcher.find() ? matcher.group(1) : null;
     }
 }
