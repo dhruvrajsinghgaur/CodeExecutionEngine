@@ -41,7 +41,6 @@ public class SyntaxHighlighter {
     private static final String NUMBER_PATTERN     =
             "\\b(0[xX][0-9a-fA-F]+[lL]?|\\d+\\.?\\d*([eE][+-]?\\d+)?[fFdDlL]?)\\b";
 
-    // Pattern order matters — earlier groups shadow later ones at the same position.
     // Comments → Strings → Chars → Annotations → Keywords → Numbers
     private static final Pattern PATTERN = Pattern.compile(
             "(?<COMMENT>"     + COMMENT_PATTERN    + ")"
@@ -53,7 +52,6 @@ public class SyntaxHighlighter {
             Pattern.DOTALL   // makes . match newlines → multi-line /* */ comments work
     );
 
-    // ── Public API ────────────────────────────────────────────────────────────────
 
     public static StyleSpans<Collection<String>> computeHighlighting(String text) {
         Matcher matcher = PATTERN.matcher(text);
