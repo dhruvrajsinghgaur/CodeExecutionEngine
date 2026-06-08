@@ -27,6 +27,6 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Storetemp/
 .idea/
 target/
+/temp/
