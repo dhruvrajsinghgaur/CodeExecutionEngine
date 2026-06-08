@@ -8,10 +8,7 @@ import java.util.regex.Pattern;
 
 public class SyntaxHighlighter {
 
-    // ── Token definitions ─────────────────────────────────────────────────────────
-
     private static final String[] KEYWORDS = {
-            // Primitive types and modifiers
             "abstract", "assert", "boolean", "break", "byte", "case", "catch",
             "char", "class", "const", "continue", "default", "do", "double",
             "else", "enum", "extends", "final", "finally", "float", "for",
@@ -20,7 +17,7 @@ public class SyntaxHighlighter {
             "protected", "public", "return", "short", "static", "strictfp",
             "super", "switch", "synchronized", "this", "throw", "throws",
             "transient", "try", "void", "volatile", "while",
-            // Modern Java keywords (Java 14+)
+
             "var", "record", "sealed", "permits", "yield", "when"
     };
 
@@ -64,14 +61,12 @@ public class SyntaxHighlighter {
         int lastEnd = 0;
 
         while (matcher.find()) {
-            // Unstyled gap between the previous match and this one
             builder.add(Collections.emptyList(), matcher.start() - lastEnd);
 
-            // Determine which group matched and map it to a CSS class
             String styleClass =
                     matcher.group("COMMENT")    != null ? "comment"    :
                             matcher.group("STRING")     != null ? "string"     :
-                            matcher.group("CHAR")       != null ? "string"     : // reuse string colour
+                            matcher.group("CHAR")       != null ? "string"     :
                             matcher.group("ANNOTATION") != null ? "annotation" :
                             matcher.group("KEYWORD")    != null ? "keyword"    :
                             matcher.group("NUMBER")     != null ? "number"     :
@@ -81,7 +76,6 @@ public class SyntaxHighlighter {
             lastEnd = matcher.end();
         }
 
-        // Trailing unstyled text
         builder.add(Collections.emptyList(), text.length() - lastEnd);
         return builder.create();
     }

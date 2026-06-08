@@ -16,7 +16,6 @@ public class IDE extends Application {
     @Override
     public void start(Stage stage) {
 
-        // ── Toolbar buttons ───────────────────────────────────────────────────────
         Button newTabBtn   = new Button("New");
         Button openBtn     = new Button("Open");
         Button saveBtn     = new Button("Save");
@@ -27,12 +26,10 @@ public class IDE extends Application {
         Button clearBtn    = new Button("Clear");
         Label  status      = new Label("Ready");
 
-        // Stop is only enabled while code is running
         stopBtn.setDisable(true);
         stopBtn.setStyle("-fx-text-fill: #cc3333;");
         runBtn.setStyle("-fx-text-fill: #2ecc71;");
 
-        // Visual separator between file ops and run controls
         Separator sep = new Separator();
         sep.setOrientation(javafx.geometry.Orientation.VERTICAL);
 
@@ -43,12 +40,9 @@ public class IDE extends Application {
                 status);
         topBar.setPadding(new Insets(8));
 
-        // ── TabPane ───────────────────────────────────────────────────────────────
         tabPane = new TabPane();
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         tabPane.getTabs().add(createEditorTab("Untitled1.java", ""));
-
-        // ── Button actions ────────────────────────────────────────────────────────
 
         newTabBtn.setOnAction(e -> {
             int n = tabPane.getTabs().size() + 1;
@@ -101,16 +95,13 @@ public class IDE extends Application {
             EditorTab et = getSelectedEditorTab();
             if (et == null) return;
 
-            // Auto-save before running so the file is always up to date
             et.saveWithChooserIfNeeded(stage);
 
-            // Disable Run, enable Stop
             runBtn.setDisable(true);
             stopBtn.setDisable(false);
             status.setText("Compiling...");
 
             et.runCode(() -> {
-                // Restore button state once execution finishes
                 runBtn.setDisable(false);
                 stopBtn.setDisable(true);
                 status.setText("Ready");
@@ -132,7 +123,6 @@ public class IDE extends Application {
             if (et != null) et.clearOutput();
         });
 
-        // ── Scene ─────────────────────────────────────────────────────────────────
         BorderPane root = new BorderPane();
         root.setTop(topBar);
         root.setCenter(tabPane);
@@ -142,7 +132,7 @@ public class IDE extends Application {
             scene.getStylesheets().add(
                     getClass().getResource("/style.css").toExternalForm());
         } catch (Exception ex) {
-            // Continue without stylesheet if not found
+
         }
 
         stage.setScene(scene);
@@ -161,6 +151,5 @@ public class IDE extends Application {
 
     public static void main(String[] args) {
         launch(args);
-
     }
 }

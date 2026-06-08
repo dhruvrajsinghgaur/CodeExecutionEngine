@@ -23,32 +23,27 @@ public class EditorTab extends Tab {
     private final TextArea outputArea;
     private final TextField inputField;
 
-    // Each tab owns its Executor and temp directory — no more static sharing
     private final Executor executor;
     private final File tempDir;
 
     private File currentFile;
     private boolean modified = false;
-    private Thread runThread; // tracks the compile+run background thread
+    private Thread runThread;
 
     public EditorTab(String title, String initialText) {
         super(title);
 
-        // Unique temp directory per tab eliminates compilation collisions
         tempDir = new File(System.getProperty("user.dir"), "temp/" + UUID.randomUUID());
         tempDir.mkdirs();
 
         executor = new Executor();
 
-        // ── Code editor ──────────────────────────────────────────────────────────
         codeArea = new CodeArea();
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         codeArea.replaceText(initialText);
         codeArea.setWrapText(false);
         codeArea.getStyleClass().add("code-area");
 
-        // Debounced syntax highlighting — fires 150 ms after the last keystroke.
-        // Without this, every single keypress triggers a full regex pass (laggy on big files).
         PauseTransition highlightPause = new PauseTransition(Duration.millis(150));
         codeArea.textProperty().addListener((obs, oldText, newText) -> {
             setModified(true);
@@ -60,13 +55,11 @@ public class EditorTab extends Tab {
             highlightPause.playFromStart();
         });
 
-        // ── Output console ───────────────────────────────────────────────────────
         outputArea = new TextArea();
         outputArea.setEditable(false);
         outputArea.setPromptText("Output will appear here...");
         outputArea.getStyleClass().add("output-area");
 
-        // ── Stdin input field ────────────────────────────────────────────────────
         inputField = new TextField();
         inputField.setPromptText("Type input and press Enter...");
         inputField.getStyleClass().add("input-field");
@@ -78,7 +71,6 @@ public class EditorTab extends Tab {
             executor.sendInput(input);
         });
 
-        // ── Layout: resizable split between editor and output ────────────────────
         SplitPane mainSplit = new SplitPane(codeArea, outputArea);
         mainSplit.setOrientation(Orientation.VERTICAL);
         mainSplit.setDividerPositions(0.7); // 70% editor, 30% output
@@ -89,7 +81,6 @@ public class EditorTab extends Tab {
 
         setContent(layout);
 
-        // ── On tab close: prompt to save if modified, then clean up ──────────────
         setOnCloseRequest(evt -> {
             if (isModified()) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -106,15 +97,12 @@ public class EditorTab extends Tab {
                     evt.consume(); return;
                 }
             }
-            executor.stop();    // kill any running process
-            deleteTempDir();    // clean up compiled class files
+            executor.stop();
+            deleteTempDir();
         });
     }
 
-    // ── File operations ───────────────────────────────────────────────────────────
-
     public String getFileName() {
-        // Strip the "modified" asterisk when returning the plain name
         String t = getText();
         return t.endsWith("*") ? t.substring(0, t.length() - 1) : t;
     }
@@ -133,9 +121,6 @@ public class EditorTab extends Tab {
         setText(modified ? base + "*" : base);
     }
 
-    /**
-     * Saves to the current file if one exists, otherwise opens a Save As dialog.
-     */
     public boolean saveWithChooserIfNeeded(Window ownerWindow) {
         if (currentFile == null) {
             FileChooser chooser = new FileChooser();
@@ -176,30 +161,18 @@ public class EditorTab extends Tab {
         }
     }
 
-    // ── Run / Stop ────────────────────────────────────────────────────────────────
-
-    /**
-     * Compiles and runs the code in a background thread.
-     * onFinished is always called on the JavaFX thread when execution ends.
-     *
-     * FIX: previously this called Compiler.compile() directly on the FX thread,
-     * which blocked the UI during compilation. Now it's fully off-thread.
-     */
     public void runCode(Runnable onFinished) {
         outputArea.clear();
 
-        // Capture text on the FX thread before going to the background thread
         final String code = codeArea.getText();
 
         runThread = new Thread(() -> {
             Compiler.compile(code, tempDir,
 
-                    // ── onSuccess ───────────────────────────────────────────────────
                     (className) -> {
                         Platform.runLater(() ->
                                 outputArea.appendText("▶  Running " + className + "...\n\n"));
 
-                        // executor.run() blocks until the process exits + all output is flushed
                         executor.run(className, tempDir,
                                 text -> outputArea.appendText(text));
 
@@ -209,7 +182,6 @@ public class EditorTab extends Tab {
                         });
                     },
 
-                    // ── onError ─────────────────────────────────────────────────────
                     (error) -> Platform.runLater(() -> {
                         outputArea.appendText("✗  Compile error:\n\n" + error);
                         onFinished.run();
@@ -221,9 +193,6 @@ public class EditorTab extends Tab {
         runThread.start();
     }
 
-    /**
-     * Kills the running process and interrupts the compile/run thread.
-     */
     public void stopCode() {
         executor.stop();
         if (runThread != null && runThread.isAlive()) {
@@ -235,8 +204,6 @@ public class EditorTab extends Tab {
         return executor.isRunning();
     }
 
-    // ── Editor helpers ────────────────────────────────────────────────────────────
-
     public CodeArea getCodeArea() {
         return codeArea;
     }
@@ -244,8 +211,6 @@ public class EditorTab extends Tab {
     public void clearOutput() {
         outputArea.clear();
     }
-
-    // ── Private helpers ───────────────────────────────────────────────────────────
 
     private void showError(String title, String message) {
         Platform.runLater(() -> {

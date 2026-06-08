@@ -5,22 +5,12 @@ import java.util.regex.Pattern;
 
 public class Compiler {
 
-    /**
-     * Compiles the given source code into the provided tempDir.
-     * This method is blocking — always call it from a background thread.
-     *
-     * @param code      Java source code to compile
-     * @param tempDir   Per-tab temp directory (avoids collisions between tabs)
-     * @param onSuccess Called with the compiled class name on success
-     * @param onError   Called with the compiler error output on failure
-     */
     public static void compile(String code,
                                File tempDir,
                                Consumer<String> onSuccess,
                                Consumer<String> onError) {
         Process process = null;
         try {
-            // Ensure temp dir exists and is clean
             if (!tempDir.exists()) {
                 tempDir.mkdirs();
             }
@@ -48,7 +38,6 @@ public class Compiler {
             pb.redirectErrorStream(true);
             process = pb.start();
 
-            // Read compiler output (errors go here on failure)
             StringBuilder output = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()))) {
@@ -67,7 +56,6 @@ public class Compiler {
             }
 
         } catch (InterruptedException e) {
-            // Thread was interrupted (user clicked Stop during compilation)
             if (process != null) process.destroyForcibly();
             Thread.currentThread().interrupt();
             onError.accept("Compilation cancelled.\n");
@@ -76,9 +64,6 @@ public class Compiler {
         }
     }
 
-    /**
-     * Extracts the name of the first public class, interface, record, or enum.
-     */
     public static String extractClassName(String code) {
         Pattern pattern = Pattern.compile(
                 "public\\s+(?:class|interface|enum|record)\\s+(\\w+)");
