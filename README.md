@@ -182,5 +182,5 @@ CodeExecutionEngine/
 ## Author
 
 **Dhruvraj Singh Gaur**  
-B.Tech CSE — Rajasthan Technical University, Kota  
+B.Tech CSE Student  
 [GitHub](https://github.com/dhruvrajsinghgaur)
